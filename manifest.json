@@ -23,6 +23,9 @@
       },
       "search_selection_in_DefaultEngine_5CurrentTab": {
          "description": "search in default search engine (open in the current tab)"
+      },
+      "search_selection_in_DefaultEngine_6RightClickBehavior": {
+         "description": "search in default search engine (right click behavior)"
       }
    },
    "description": "Add shortcut keys to open a new google result tab for selected text. Shortcut keys can be set in above left menu in Extensions.",
