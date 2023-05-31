@@ -168,7 +168,7 @@ function openSearchTab_RightClickBehaviour() {
       
       let url = text;
       if(!isUrl(text)) {
-        // TODO: Replace with default search engine
+        // TODO: Find a way to replace with default search provider
         url = "https://www.google.com/search?q=" + text;
       }
 
