@@ -14,17 +14,20 @@ chrome.commands.onCommand.addListener(function (command) {
   else if (command == "search_selection_in_DefaultEngine_5CurrentTab") {
     openSearchTab_DefaultEngine("CURRENT_TAB");
   }
+  else if(command == "search_selection_in_DefaultEngine_6RightClickBehavior") {
+    openSearchTab_RightClickBehaviour()
+  }
 });
 
-function getCurrentTabId(callback) {
-  console.log("getCurrentTabId", callback)
+function getCurrentTab(callback) {
+  console.log("getCurrentTab", callback)
   chrome.tabs.query(
     { active: true, currentWindow: true },
     tabs => {
-      const tabId = tabs[0].id;
-      console.log("getCurrentTabId", "tabs", tabs, "tabId", tabId);
+      const tab = tabs[0];
+      console.log("getCurrentTab", "tabs", tabs, "tabId", tab.id);
       if (callback) {
-        callback(tabId);
+        callback(tab);
       }
     }
   );
@@ -129,8 +132,8 @@ function getSelectedText(tabId, callback) {
 
 function openSearchTab(baseURL_bef, baseURL_aft = "", f_Active) {
   console.log("openSearchTab", baseURL_bef, baseURL_aft = "", f_Active)
-  getCurrentTabId(
-    tabId => getSelectedText(tabId,
+  getCurrentTab(
+    tab => getSelectedText(tab.id,
       text => {
         console.log("openSearchTab", "text", text);
         var searchURL = baseURL_bef + text + baseURL_aft;
@@ -145,7 +148,7 @@ function openSearchTab(baseURL_bef, baseURL_aft = "", f_Active) {
 }
 
 function openSearchTab_DefaultEngine(disposition) {
-  getCurrentTabId(tabId => getSelectedText(tabId,
+  getCurrentTab(tab => getSelectedText(tab.id,
     text => {
       chrome.search.query({
         text,
@@ -153,4 +156,54 @@ function openSearchTab_DefaultEngine(disposition) {
       })
     }));
   return true;
+}
+
+// This is the right click bevahiour on selected text
+// If selected text is an URL(Go to <text>), it opens the URL in a new tab
+// Else (Search <default search provider> for <text>), it searches for the text.
+function openSearchTab_RightClickBehaviour() {
+  getCurrentTab(tab => getSelectedText(tab.id,
+    text => {
+      console.log("opening search tab with right click behaviour", tab)
+      
+      let url = text;
+      if(!isUrl(text)) {
+        // TODO: Find a way to replace with default search provider
+        url = "https://www.google.com/search?q=" + text;
+      }
+
+      chrome.tabs.create({
+        url: url,
+        active: true,
+        index: tab.index + 1
+      });
+    }));
+  return true;
+}
+
+// from: https://github.com/segmentio/is-url/blob/master/index.js
+var protocolAndDomainRE = /^(?:\w+:)?\/\/(\S+)$/;
+var localhostDomainRE = /^localhost[\:?\d]*(?:[^\:?\d]\S*)?$/
+var nonLocalhostDomainRE = /^[^\s\.]+\.\S{2,}$/;
+function isUrl(string){
+  if (typeof string !== 'string') {
+    return false;
+  }
+
+  var match = string.match(protocolAndDomainRE);
+  if (!match) {
+    return false;
+  }
+
+  var everythingAfterProtocol = match[1];
+  if (!everythingAfterProtocol) {
+    return false;
+  }
+
+  if (localhostDomainRE.test(everythingAfterProtocol) ||
+      nonLocalhostDomainRE.test(everythingAfterProtocol)) {
+    return true;
+  }
+
+  return false;
 }
